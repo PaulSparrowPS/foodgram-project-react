@@ -1,5 +1,4 @@
 import io
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.db.models.aggregates import Count, Sum
@@ -10,25 +9,25 @@ from djoser.views import UserViewSet
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import generics, status, viewsets
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.decorators import action, api_view
+from rest_framework import generics
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import action
 from rest_framework.permissions import (SAFE_METHODS, AllowAny,
                                         IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
 from api.filters import IngredientFilter, RecipeFilter
-from api.permissions import IsAdminOrReadOnly
+from api.permissions import IsAuthenticated, IsAdminOrReadOnly
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
                             Subscribe, Tag)
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
                           RecipeWriteSerializer, SubscribeRecipeSerializer,
-                          SubscribeSerializer, TagSerializer, TokenSerializer,
+                          SubscribeSerializer, TagSerializer,
                           UserCreateSerializer, UserListSerializer,
-                          UserPasswordSerializer)
-from django.views.decorators.csrf import csrf_exempt
+                          )
+
 
 User = get_user_model()
 FILENAME = 'shoppingcart.pdf'
@@ -81,66 +80,17 @@ class AddAndDeleteSubscribe(
         if request.user.id == instance.id:
             return Response(
                 {'errors': 'На самого себя не подписаться!'},
-                status=status.HTTP_400_BAD_REQUEST)
+                status=HTTP_400_BAD_REQUEST)
         if request.user.follower.filter(author=instance).exists():
             return Response(
                 {'errors': 'Уже подписан!'},
-                status=status.HTTP_400_BAD_REQUEST)
+                status=HTTP_400_BAD_REQUEST)
         subs = request.user.follower.create(author=instance)
         serializer = self.get_serializer(subs)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
         self.request.user.follower.filter(author=instance).delete()
-
-
-class AddDeleteFavoriteRecipe(
-        GetObjectMixin,
-        generics.RetrieveDestroyAPIView,
-        generics.ListCreateAPIView):
-    """Добавление и удаление рецепта в/из избранных."""
-
-    def create(self, request, *args, **kwargs):
-        instance = self.get_object()
-        request.user.favorite_recipe.recipe.add(instance)
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def perform_destroy(self, instance):
-        self.request.user.favorite_recipe.recipe.remove(instance)
-
-
-class AddDeleteShoppingCart(
-        GetObjectMixin,
-        generics.RetrieveDestroyAPIView,
-        generics.ListCreateAPIView):
-    """Добавление и удаление рецепта в/из корзины."""
-
-    def create(self, request, *args, **kwargs):
-        instance = self.get_object()
-        request.user.shopping_cart.recipe.add(instance)
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def perform_destroy(self, instance):
-        self.request.user.shopping_cart.recipe.remove(instance)
-
-
-class AuthToken(ObtainAuthToken):
-    """Авторизация пользователя."""
-
-    serializer_class = TokenSerializer
-    permission_classes = (AllowAny,)
-
-    @csrf_exempt  # Отключен токен
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return Response(
-            {'auth_token': token.key},
-            status=status.HTTP_201_CREATED)
 
 
 class UsersViewSet(UserViewSet):
@@ -183,8 +133,8 @@ class UsersViewSet(UserViewSet):
         return self.get_paginated_response(serializer.data)
 
 
-class RecipesViewSet(viewsets.ModelViewSet):
-    """Рецепты."""
+class RecipesViewSet(ModelViewSet):
+    """Работает с рецептами."""
 
     queryset = Recipe.objects.all()
     filterset_class = RecipeFilter
@@ -216,6 +166,36 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    @action(detail=True, permission_classes=(IsAuthenticated,))
+    def favorite(self, request) -> Response:
+        """Добавление и удаление рецепта в/из избранных."""
+
+    @favorite.mapping.post
+    def create(self, request, *args, **kwargs):
+        instance = self.get_object()
+        request.user.favorite_recipe.recipe.add(instance)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=HTTP_201_CREATED)
+
+    @favorite.mapping.delete
+    def perform_destroy(self, instance):
+        self.request.user.favorite_recipe.recipe.remove(instance)
+
+    @action(detail=True, permission_classes=(IsAuthenticated,))
+    def shopping_cart_crt(self, request) -> Response:
+        """Добавление и удаление рецепта в/из корзины."""
+
+    @shopping_cart_crt.mapping.post
+    def create(self, request, *args, **kwargs):
+        instance = self.get_object()
+        request.user.shopping_cart.recipe.add(instance)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=HTTP_201_CREATED)
+
+    @shopping_cart_crt.mapping.delete
+    def perform_destroy(self, instance):
+        self.request.user.shopping_cart.recipe.remove(instance)
 
     @action(
         detail=False,
@@ -264,7 +244,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
 class TagsViewSet(
         PermissionAndPaginationMixin,
-        viewsets.ModelViewSet):
+        ModelViewSet):
     """Список тэгов."""
 
     queryset = Tag.objects.all()
@@ -273,26 +253,9 @@ class TagsViewSet(
 
 class IngredientsViewSet(
         PermissionAndPaginationMixin,
-        viewsets.ModelViewSet):
+        ModelViewSet):
     """Список ингредиентов."""
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     filterset_class = IngredientFilter
-
-
-@api_view(['post'])
-def set_password(request):
-    """Изменить пароль."""
-
-    serializer = UserPasswordSerializer(
-        data=request.data,
-        context={'request': request})
-    if serializer.is_valid():
-        serializer.save()
-        return Response(
-            {'message': 'Пароль изменен!'},
-            status=status.HTTP_201_CREATED)
-    return Response(
-        {'error': 'Введите верные данные!'},
-        status=status.HTTP_400_BAD_REQUEST)

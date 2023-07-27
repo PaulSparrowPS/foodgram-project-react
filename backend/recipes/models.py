@@ -1,8 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core import validators
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from rest_framework.decorators import action
 
 User = get_user_model()
 
@@ -58,7 +57,7 @@ class Recipe(models.Model):
         max_length=255)
     image = models.ImageField(
         'Изображение рецепта',
-        upload_to='static/recipe/',
+        upload_to='static/images/',
         blank=True,
         null=True)
     text = models.TextField(
@@ -102,7 +101,7 @@ class RecipeIngredient(models.Model):
         default=1,
         validators=(
             validators.MinValueValidator(
-                1, message='Мин. количество ингридиентов 1'),),
+                1, message='Мин. количество ингредиентов 1'),),
         verbose_name='Количество',)
 
     class Meta:
@@ -163,7 +162,7 @@ class FavoriteRecipe(models.Model):
         list_ = [item['name'] for item in self.recipe.values('name')]
         return f'Пользователь {self.user} добавил {list_} в избранные.'
 
-    @receiver(post_save, sender=User)
+    @action(methods=['post', 'delete'], detail=True)
     def create_favorite_recipe(
             sender, instance, created, **kwargs):
         if created:
@@ -191,7 +190,7 @@ class ShoppingCart(models.Model):
         list_ = [item['name'] for item in self.recipe.values('name')]
         return f'Пользователь {self.user} добавил {list_} в покупки.'
 
-    @receiver(post_save, sender=User)
+    @action(methods=['post', 'delete'], detail=True)
     def create_shopping_cart(
             sender, instance, created, **kwargs):
         if created:

@@ -1,16 +1,17 @@
-from rest_framework import permissions
+from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.permissions import IsAuthenticated  # noqa F401
 
 
-class IsAuthorOrAdminOrReadOnly(permissions.BasePermission):
+class IsAuthorOrAdminOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         return (
             obj.author == request.user
-            or request.method in permissions.SAFE_METHODS
+            or request.method in SAFE_METHODS
             or request.user.is_superuser)
 
 
-class IsAdminOrReadOnly(permissions.BasePermission):
+class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         return (
-            request.method in permissions.SAFE_METHODS
+            request.method in SAFE_METHODS
             or request.user.is_staff)
