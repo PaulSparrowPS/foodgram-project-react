@@ -13,13 +13,14 @@ from rest_framework import generics
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
+from rest_framework import permissions
 from rest_framework.permissions import (SAFE_METHODS, AllowAny,
                                         IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
 from api.filters import IngredientFilter, RecipeFilter
-from api.permissions import IsAuthenticated, IsAdminOrReadOnly
+from api.permissions import IsAdminOrReadOnly
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
                             Subscribe, Tag)
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
@@ -187,14 +188,14 @@ class RecipesViewSet(ModelViewSet):
         """Добавление и удаление рецепта в/из корзины."""
 
     @shopping_cart_crt.mapping.post
-    def create(self, request, *args, **kwargs):
+    def create_crt(self, request, *args, **kwargs):
         instance = self.get_object()
         request.user.shopping_cart.recipe.add(instance)
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=HTTP_201_CREATED)
 
     @shopping_cart_crt.mapping.delete
-    def perform_destroy(self, instance):
+    def perform_crt(self, instance):
         self.request.user.shopping_cart.recipe.remove(instance)
 
     @action(
