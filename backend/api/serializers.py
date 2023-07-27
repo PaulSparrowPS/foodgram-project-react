@@ -4,7 +4,7 @@ from drf_base64.fields import Base64ImageField
 from rest_framework.serializers import (
     ModelSerializer, SerializerMethodField, BooleanField,
     PrimaryKeyRelatedField, IntegerField, CharField, EmailField,
-    ValidationError, CurrentUserDefault)
+    ValidationError, CurrentUserDefault, ReadOnlyField)
 
 from recipes.models import Ingredient, Recipe, Tag, RecipeIngredient, Subscribe
 
@@ -137,11 +137,11 @@ class RecipeWriteSerializer(ModelSerializer):
 
     def validate_ingredients(self, ingredients):
         if not ingredients:
-            raise serializers.ValidationError(
+            raise ValidationError(
                 'Мин. 1 ингредиент в рецепте!')
         for ingredient in ingredients:
             if int(ingredient.get('amount')) < 1:
-                raise serializers.ValidationError(
+                raise ValidationError(
                     'Количество ингредиента >= 1!')
         return ingredients
 
