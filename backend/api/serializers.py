@@ -57,7 +57,7 @@ class TagSerializer(ModelSerializer):
 
 
 class IngredientSerializer(ModelSerializer):
-    """Сериализатор для вывода ингридиентов."""
+    """Сериализатор для вывода ингредиентов."""
 
     class Meta:
         model = Ingredient
@@ -123,10 +123,6 @@ class RecipeWriteSerializer(ModelSerializer):
         if not tags:
             raise ValidationError(
                 'Нужен хотя бы один тэг для рецепта!')
-        for tag_name in tags:
-            if not Tag.objects.filter(name=tag_name).exists():
-                raise ValidationError(
-                    f'Тэга {tag_name} не существует!')
         return data
 
     def validate_cooking_time(self, cooking_time):

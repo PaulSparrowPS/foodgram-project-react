@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 import django_filters as filters
 
 from users.models import User
-from recipes.models import Ingredient, Recipe
+from recipes.models import Recipe
 
 
 class TagsMultipleChoiceField(
@@ -22,14 +22,6 @@ class TagsMultipleChoiceField(
 
 class TagsFilter(filters.AllValuesMultipleFilter):
     field_class = TagsMultipleChoiceField
-
-
-class IngredientFilter(filters.FilterSet):
-    name = filters.CharFilter(lookup_expr='istartswith')
-
-    class Meta:
-        model = Ingredient
-        fields = ('name',)
 
 
 class RecipeFilter(filters.FilterSet):

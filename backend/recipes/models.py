@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core import validators
 from django.db import models
-from rest_framework.decorators import action
 
 User = get_user_model()
 
@@ -57,7 +56,7 @@ class Recipe(models.Model):
         max_length=255)
     image = models.ImageField(
         'Изображение рецепта',
-        upload_to='static/images/',
+        upload_to='recipes/images/',
         blank=True,
         null=True)
     text = models.TextField(
@@ -162,12 +161,6 @@ class FavoriteRecipe(models.Model):
         list_ = [item['name'] for item in self.recipe.values('name')]
         return f'Пользователь {self.user} добавил {list_} в избранные.'
 
-    @action(methods=['post', 'delete'], detail=True)
-    def create_favorite_recipe(
-            sender, instance, created, **kwargs):
-        if created:
-            return FavoriteRecipe.objects.create(user=instance)
-
 
 class ShoppingCart(models.Model):
     user = models.OneToOneField(
@@ -189,9 +182,3 @@ class ShoppingCart(models.Model):
     def __str__(self):
         list_ = [item['name'] for item in self.recipe.values('name')]
         return f'Пользователь {self.user} добавил {list_} в покупки.'
-
-    @action(methods=['post', 'delete'], detail=True)
-    def create_shopping_cart(
-            sender, instance, created, **kwargs):
-        if created:
-            return ShoppingCart.objects.create(user=instance)

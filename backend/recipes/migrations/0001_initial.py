@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255, verbose_name='Название рецепта')),
-                ('image', models.ImageField(blank=True, null=True, upload_to='static/recipe/', verbose_name='Изображение рецепта')),
+                ('image', models.ImageField(blank=True, null=True, upload_to='recipes/images/', verbose_name='Изображение рецепта')),
                 ('text', models.TextField(verbose_name='Описание рецепта')),
                 ('cooking_time', models.PositiveSmallIntegerField(validators=[django.core.validators.MinValueValidator(1, message='Мин. время приготовления 1 минута')], verbose_name='Время приготовления в минутах')),
                 ('pub_date', models.DateTimeField(auto_now_add=True, verbose_name='Дата публикации')),
