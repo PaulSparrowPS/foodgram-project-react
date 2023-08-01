@@ -46,7 +46,6 @@ class GetObjectMixin:
 class PermissionAndPaginationMixin:
     """Миксина для списка тегов и ингредиентов."""
 
-    permission_classes = (IsAdminOrReadOnly,)
     pagination_class = None
 
 
