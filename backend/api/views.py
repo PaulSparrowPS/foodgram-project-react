@@ -19,10 +19,11 @@ from rest_framework.response import Response
 
 from api.filters import RecipeFilter
 from recipes.models import (FavoriteRecipe, Recipe, ShoppingCart,
-                            Subscribe)
+                            Subscribe, Ingredient, Tag)
 from .serializers import (RecipeReadSerializer, RecipeWriteSerializer,
                           SubscribeRecipeSerializer, SubscribeSerializer,
-                          UserCreateSerializer, UserListSerializer,)
+                          UserCreateSerializer, UserListSerializer,
+                          IngredientSerializer, TagSerializer)
 
 
 User = get_user_model()
@@ -30,7 +31,7 @@ FILENAME = 'shoppingcart.pdf'
 
 
 class GetObjectMixin:
-    """Миксина для полчуения рецепта и проверки прав."""
+    """Миксина для получения рецепта и проверки прав."""
 
     serializer_class = SubscribeRecipeSerializer
     permission_classes = (AllowAny,)
@@ -40,6 +41,13 @@ class GetObjectMixin:
         recipe = get_object_or_404(Recipe, id=recipe_id)
         self.check_object_permissions(self.request, recipe)
         return recipe
+
+
+class PermissionAndPaginationMixin:
+    """Миксина для списка тегов и ингредиентов."""
+
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = None
 
 
 class UsersViewSet(UserViewSet):
@@ -219,3 +227,23 @@ class RecipesViewSet(ModelViewSet):
         page.save()
         buffer.seek(0)
         return FileResponse(buffer, as_attachment=True, filename=FILENAME)
+
+
+class TagsViewSet(
+        PermissionAndPaginationMixin,
+        ModelViewSet):
+    """Список тэгов."""
+
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    http_method_names = ['get']
+
+
+class IngredientsViewSet(
+        PermissionAndPaginationMixin,
+        ModelViewSet):
+    """Список ингредиентов."""
+
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+    http_method_names = ['get']
