@@ -13,7 +13,11 @@ SECRET_KEY = (
 
 DEBUG = os.getenv('DEBUG', default='True') == 'True'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'backend']
+ALLOWED_HOSTS = ['127.0.0.1',
+                 'localhost',
+                 'backend',
+                 '130.193.55.82',
+                 'paulsparrow3.ddns.net']
 
 AUTH_USER_MODEL = 'users.User'
 

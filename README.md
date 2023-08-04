@@ -3,7 +3,7 @@
 **Описание проекта
 Сайт позволяет пользователям просматривать рецепты любимых блюд, а также публиковать собственные. На этом сервисе пользователи могут публиковать рецепты, подписываться на публикации других пользователей, добавлять понравившиеся рецепты в список «Избранное», а перед походом в магазин скачивать сводный список продуктов, необходимых для приготовления одного или нескольких выбранных блюд.**
 
-Сайт доступен по адресу: http://paulsparrow3.ddns.net
+Сайт доступен по адресу: https://paulsparrow3.ddns.net
 
 ## Foodgram - проект позволяет:
 + Просматривать рецепты
@@ -14,14 +14,14 @@
 
 ## Запуск проекта в Docker на локальной машине.
 + В папке infra выполняем команду, что бы собрать контейнеры:
-```docker-compose up -d --build```
+```sudo docker compose up -d --build```
 + Для формирования базы из миграций, финальной настройки и заполнении базы тегами и ингредиентами, а так же подтянуть статику, и создаем суперюзера:
-```docker-compose exec backend python manage.py makemigrations```
-```docker-compose exec backend python manage.py createsuperuser```
-```docker-compose exec backend python manage.py collectstatic --no-input```
+```sudo docker compose exec backend python manage.py makemigrations```
+```sudo docker compose exec backend python manage.py createsuperuser```
+```sudo docker compose exec backend python manage.py collectstatic --no-input```
 + Дополнительно можно наполнить DB ингредиентами и тэгами::
-```docker-compose exec backend python manage.py load_tags```
-```docker-compose exec backend python manage.py load_ingrs```
+```sudo docker compose exec backend python manage.py load_tags```
+```sudo docker compose exec backend python manage.py load_ingrs```
 + сохранить открытый ключ в вашем аккаунте на GitHub. Для этого вывести ключ в терминал командой ```cat .ssh/id_rsa.pub```. Скопировать ключ от символов ssh-rsa, включительно, и до конца. Добавить это ключ к вашему аккаунту на GitHub.
 + клонировать проект с GitHub на сервер: ```git clone git@github.com:Ваш_аккаунт/<Имя проекта>.git```
 
