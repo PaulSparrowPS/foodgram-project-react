@@ -1,14 +1,10 @@
-import io
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.db.models.aggregates import Sum
 from django.db.models.expressions import Exists, OuterRef, Value
-from django.http import FileResponse
+from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
@@ -27,7 +23,7 @@ from .serializers import (RecipeReadSerializer, RecipeWriteSerializer,
 
 
 User = get_user_model()
-FILENAME = 'shoppingcart.pdf'
+FILENAME = 'shopping_list.txt'
 
 
 class GetObjectMixin:
@@ -190,42 +186,28 @@ class RecipesViewSet(ModelViewSet):
     def download_shopping_cart(self, request):
         """Качаем список с ингредиентами."""
 
-        buffer = io.BytesIO()
-        page = canvas.Canvas(buffer)
-        pdfmetrics.registerFont(TTFont('Vera', 'Vera.ttf'))
-        x_position, y_position = 50, 800
         shopping_cart = (
             request.user.shopping_cart.recipe.
             values(
                 'ingredients__name',
                 'ingredients__measurement_unit'
             ).annotate(amount=Sum('recipe__amount')).order_by())
-        page.setFont('Vera', 14)
         if shopping_cart:
-            indent = 20
-            page.drawString(x_position, y_position, 'Cписок покупок:')
+            shopping_list = ["Список покупок:\n\n"]
             for index, recipe in enumerate(shopping_cart, start=1):
-                page.drawString(
-                    x_position, y_position - indent,
+                ing_list = (
                     f'{index}. {recipe["ingredients__name"]} - '
                     f'{recipe["amount"]} '
                     f'{recipe["ingredients__measurement_unit"]}.')
-                y_position -= 15
-                if y_position <= 50:
-                    page.showPage()
-                    y_position = 800
-            page.save()
-            buffer.seek(0)
-            return FileResponse(
-                buffer, as_attachment=True, filename=FILENAME)
-        page.setFont('Vera', 24)
-        page.drawString(
-            x_position,
-            y_position,
-            'Cписок покупок пуст!')
-        page.save()
-        buffer.seek(0)
-        return FileResponse(buffer, as_attachment=True, filename=FILENAME)
+                shopping_list.extend(ing_list)
+                shopping_list.extend('\n')
+        else:
+            shopping_list = ["Список покупок пуст!\n"]
+        response = HttpResponse(
+            shopping_list, content_type="text.txt; charset=utf-8"
+        )
+        response["Content-Disposition"] = f"attachment; filename={FILENAME}"
+        return response
 
 
 class TagsViewSet(
