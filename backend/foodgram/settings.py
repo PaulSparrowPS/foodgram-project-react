@@ -135,4 +135,11 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 6,
 }
 
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:9000/', 'http://localhost/']
+CSRF_TRUSTED_ORIGINS = ['https://127.0.0.1:9000/', 'https://localhost/',
+                        'https://130.193.55.82/', 'https://paulsparrow3.ddns.net/',
+                        'https://*.ddns.net/', 'https://ddns.net/', 'http://*.ddns.net/', 'http://ddns.net/',
+                        'http://127.0.0.1:9000/', 'http://localhost/',
+                        'http://130.193.55.82/', 'http://paulsparrow3.ddns.net/',
+                        'https://paulsparrow3.ddns.net/admin/login/?next=/admin/',
+                        'https://paulsparrow3.ddns.net/admin/'
+                        ]
